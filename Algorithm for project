@@ -8,4 +8,6 @@ For each word in the line, see if the size can fit in the line, if not, end the 
 - when printing out each new line, use write(1, stringbuffer, stringbuffer->used)
   - then, remove with the string buffer remove method
   
+  using isspace() put characters that is not spcae into string array, then concat the string
+  track of the number of new lines, if there are more than one new lines, apply number of new lines-1
   
