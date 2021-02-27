@@ -3,4 +3,3 @@ Use string buffer
 For each word in the line, see if the size can fit in the line, if not, end the line and go to the next line
   If that word is longer than the width, write the word on its own and remember to return EXIT_FAILURE at the end
 1) Check inputs (if one, read from standard input. if two, either it's a file name or a directory)
-hello
