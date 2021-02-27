@@ -7,3 +7,5 @@ For each word in the line, see if the size can fit in the line, if not, end the 
 
 - when printing out each new line, use write(1, stringbuffer, stringbuffer->used)
   - then, remove with the string buffer remove method
+  
+  helloo
