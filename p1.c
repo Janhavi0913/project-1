@@ -71,11 +71,14 @@ int main(int argc, char **argv){
     }
     unsigned int width = atoi(argv[1]); 
     assert(width > 0);  
-    if(argc == 1){ // no file or directory provided  
+    if(argc == 2){ // no file or directory provided  
         strbuf_t S;
-        char *input = malloc(sizeof(char)); 
-        int rval = read(0, input, sizeof(char));
-        sb_concat(&S, input);
+        char *input = malloc(sizeof(char));
+	int rval = 1;
+	while(rval != 0){
+         rval = read(0, input, sizeof(char));
+       	 sb_concat(&S, input);
+	}
         free(input);
         int error = wrapout(S, width);
         sb_destroy(&S);
