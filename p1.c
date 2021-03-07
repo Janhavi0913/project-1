@@ -2,28 +2,34 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <assert.h>
 #include <unistd.h>
+#include <limits.h>
 #include "strbuf.c"
 
 void print(strbuf_t w, int l){
     char line[l];
-	for(int i = 0; i <l; i++){
-		line[i] = w.data[i];
-	}
-	 write(1, line, l);
+    for(int i = 0; i <l; i++){
+        line[i] = w.data[i];
+    }
+     write(1, line, l);
 }
-
+strbuf_t newword(strbuf_t w){
+    sb_destroy(&w);
+    strbuf_t word2;
+    sb_init(&word2, 5);
+    return word2;
+}
 int wrapout (strbuf_t input, unsigned int width){ // stdout wrap text
 int m = 0, space = width, exceed = 0, nl = 0, tab = 0, bl = 0;
-   while(m < input.used){
-       strbuf_t word;
-       int wordlength = 0;
+strbuf_t word;
+sb_init(&word, 5);  
+while(m < input.used){       
+       int wordlength = 0, wptr = 0;
        while(isspace(input.data[m]) == 0){
-			sb_append(&word, input.data[m]);
-			wordlength++;
+            sb_append(&word, input.data[m]);
+            wordlength++;
             m++;
-		}
+        }
         if (wordlength <= space){
             space = space - wordlength;
             print(word, wordlength);
@@ -40,7 +46,7 @@ int m = 0, space = width, exceed = 0, nl = 0, tab = 0, bl = 0;
             print(word, wordlength);
         }
         while(isspace(input.data[m]) != 0){// dealing with space characters now
-		    if (input.data[m] == '\n'){
+            if (input.data[m] == '\n'){
                 nl++;
             }
             else if (input.data[m] == '\t'){
@@ -50,7 +56,7 @@ int m = 0, space = width, exceed = 0, nl = 0, tab = 0, bl = 0;
                 bl++;
             }
             m++;
-		}
+        }
         if (nl > 1){
             for (int p = 0; p < (nl-1); p++){
                 write(1, "\n", 1);
@@ -60,30 +66,41 @@ int m = 0, space = width, exceed = 0, nl = 0, tab = 0, bl = 0;
             if(space >= 1)
                 write(1, " ", 1);
         }  
-        sb_destroy(&word); // done with the word
+        word = newword(word); // done with the word
    }
 return exceed;
 }
 
 int main(int argc, char **argv){
-    if(argc > 3 || argc < 2){ // too many arguments or too little arguments
+    if(argc < 2 || argc > 3){ // too many arguments or too little arguments
+     printf("Number of argument error\n");
         return EXIT_FAILURE;
     }
     unsigned int width = atoi(argv[1]); 
-    assert(width > 0);  
     if(argc == 2){ // no file or directory provided  
         strbuf_t S;
-        char *input = malloc(sizeof(char));
-	int rval = 1;
-	while(rval != 0){
-         rval = read(0, input, sizeof(char));
-       	 sb_concat(&S, input);
-	}
+        sb_init(&S,5);
+        char *input = malloc(sizeof(char)*INT_MAX); 
+        int rval = read(0, input, INT_MAX);
+        sb_concat(&S, input);
         free(input);
         int error = wrapout(S, width);
         sb_destroy(&S);
-        if(error != 0) return EXIT_FAILURE; // a word had exceeded page length
+        if(error != 0) return EXIT_FAILURE; // a word had exceeded page length   
     }
     
 return EXIT_SUCCESS;
 }
+/*
+printf("the length of input %ld\n", strlen(input));
+        for(int k = 0; k < strlen(input); k++){
+            printf("%c", input[k]);
+        }
+        printf("\n");
+
+        printf("placed in the buffer\n");
+        for(int i = 0; i < S.used; ++i){
+            printf("%c", S.data[i]);
+        }
+        printf("\n");
+*/
