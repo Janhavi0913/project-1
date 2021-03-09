@@ -113,10 +113,7 @@ int wrapdir (unsigned int width, DIR* dir)
         }
     }
     closedir(dir);
-    if(willerror != 0)
-        return 1;
-    else
-        return 0;
+    return willerror;
 }
 
 int main(int argc, char **argv){
