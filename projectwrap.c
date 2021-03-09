@@ -6,6 +6,7 @@
 #include "strbuf.c"
 #include <dirent.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 void print(strbuf_t w, int l, unsigned int placeto){ //can't we just do write(placeto, w.data, l)?
     char line[l];
