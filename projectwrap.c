@@ -110,7 +110,7 @@ int wrapdir (unsigned int width, DIR* dir)
         }
         else
         {
-            DIR* nextdir = opendir("%s", f);
+            DIR* nextdir = opendir(f);
             willerror = wrapdir(width, nextdir);
         }
     }
@@ -142,8 +142,8 @@ int main(int argc, char **argv){
         }
         else
         {
-            DIR* dir1 = opendir("%s", f);
-            wrapdir(width, dir1);
+            DIR* dir1 = opendir(f);
+            int error = wrapdir(width, dir1);
             if(error != 0)
                 return EXIT_FAILURE;
         }
