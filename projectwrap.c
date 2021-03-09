@@ -22,14 +22,14 @@ strbuf_t newword(strbuf_t w){
     return word2;
 }
 int wrapout (unsigned int width, unsigned int placefrom, unsigned int placeto){ // stdout wrap text width fd, 
-int space = width, exceed = 0, nl = 0, tab = 0, bl = 0;
+int space = width, exceed = 0;
 char *a = malloc(sizeof(char));
 int rval = read(placefrom, a, sizeof(char));
 strbuf_t word;
 sb_init(&word, 5);  
     while(rval == 1){       
-       int wordlength = 0;
-       while(isspace(a[0]) == 0 && rval== 1){
+       int wordlength = 0, nl = 0, tab = 0, bl = 0;
+       while(isspace(a[0]) == 0 && rval == 1){
             sb_append(&word, a[0]);
             wordlength++;
             rval = read(placefrom, a, sizeof(char));
@@ -61,7 +61,7 @@ sb_init(&word, 5);
             else if (a[0] == ' '){ 
                 bl++;
             }
-        rval = read(0, a, sizeof(char));
+        rval = read(placefrom, a, sizeof(char));
 
         }
         if(nl > 1){
@@ -77,13 +77,13 @@ sb_init(&word, 5);
    }
    free(a);
    sb_destroy(&word);
-   close(0);
+   close(placefrom);
    return exceed;
 }
 int printfile(unsigned int width, char* filename, int fd)
 {
     char* newfile = "wrap.";
-    strcat(newfile, filename);
+    strcat(newfile,filename);
     int newfd = open(newfile, O_WRONLY);
     int error = wrapout(width, fd, newfd);
     write(newfd, "\n", 1);
@@ -100,8 +100,8 @@ int wrapdir (unsigned int width, DIR* dir)
     int willerror = 0;
     while((cd = readdir(dir)) != NULL)
     {
-        char* f = cd.d_name;
-        if(cd.d_type == DT_REG)
+        char* f = cd->d_name;
+        if(cd->d_type == DT_REG)
         {
             int fd = open(f, O_RDONLY);
             int error = printfile(width, f, fd);
