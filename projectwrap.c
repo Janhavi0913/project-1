@@ -81,7 +81,8 @@ sb_init(&word, 5);
 }
 int printfile(unsigned int width, char* filename, int fd)
 {
-    char* newfile = "wrap." + filename;
+    char* newfile = "wrap.";
+    strcat(newfile, filename);
     int newfd = open(newfile, O_WRONLY);
     int error = wrapout(width, fd, newfd);
     write(newfd, "\n", 1);
