@@ -11,3 +11,5 @@ For each word in the line, see if the size can fit in the line, if not, end the 
   using isspace() put characters that is not spcae into string array, then concat the string
   track of the number of new lines, if there are more than one new lines, apply number of new lines-1
   
+  1) question @201 in piazza (does this mean we only look inside the called directory and only do something if it's a file?)
+  2) Do spaces count within the wrap size? (ex. 6-> name\nis vs name is)
