@@ -9,16 +9,17 @@
 #include <fcntl.h>
 
 void print(strbuf_t w, int l, unsigned int placeto){ //can't we just do write(placeto, w.data, l)?
-    char line[l];
-    for(int i = 0; i <l; i++){
+char *line = malloc(sizeof(char) * l);
+    for(int i = 0; i < l; i++){
         line[i] = w.data[i];
     }
-     write(placeto, line, l);
+write(placeto,line,l);
+free(line);
 }
-strbuf_t newword(strbuf_t w){
+strbuf_t newword(strbuf_t w, int width){
     sb_destroy(&w);
     strbuf_t word2;
-    sb_init(&word2, 5);
+    sb_init(&word2, width);
     return word2;
 }
 int wrapout (unsigned int width, unsigned int placefrom, unsigned int placeto){ // stdout wrap text width fd, 
@@ -26,7 +27,7 @@ int space = width, exceed = 0;
 char *a = malloc(sizeof(char));
 int rval = read(placefrom, a, sizeof(char));
 strbuf_t word;
-sb_init(&word, 5);  
+sb_init(&word, width);  
     while(rval == 1){       
        int wordlength = 0, nl = 0, tab = 0, bl = 0;
        while(isspace(a[0]) == 0 && rval == 1){
@@ -34,24 +35,29 @@ sb_init(&word, 5);
             wordlength++;
             rval = read(placefrom, a, sizeof(char));
         }
-        if (wordlength <= space){
+        if(wordlength + 1 <= space){
             space = space - wordlength;
             print(word, wordlength, placeto);
-            word = newword(word); // done with the word
+            word = newword(word, width); // done with the word
         }
-        else if (wordlength > space){ //if 
-            write(placeto, "\n", 1);// put a newline
-            if(wordlength > width){
-                exceed++;
-                print(word, wordlength, placeto);//write the word one the newline then start a newline 
-                write(placeto, "\n", 1);
-                break;
-            }
-            space = width - wordlength;
-            print(word, wordlength, placeto);
-            word = newword(word); // done with the word
+        else if(wordlength >= space){
+                if(space != width){
+                    write(placeto, "\n", 1); // put a newline
+                }
+                if(wordlength > width){
+                    exceed++;
+                    print(word, wordlength, placeto);//write the word one the newline then start a newline 
+                    write(placeto, "\n", 1);
+                    space = width;
+                    word = newword(word, width); // done with the word
+                }
+                else{
+                    space = width - wordlength;
+                    print(word,wordlength, placeto);
+                    word = newword(word, width); // done with the word
+                }
         }
-        while(isspace(a[0]) != 0 && rval == 1){// dealing with space characters now
+        while(isspace(a[0]) != 0 && rval == 1){ // dealing with space characters now
             if (a[0] == '\n'){
                 nl++;
             }
@@ -62,16 +68,17 @@ sb_init(&word, 5);
                 bl++;
             }
         rval = read(placefrom, a, sizeof(char));
-
         }
         if(nl > 1){
             for (int p = 0; p < (nl-1); p++){
                 write(placeto, "\n", 1);
             }
+            space = width;
         }
-        if(tab > 0 || bl > 0){
-            if(space >= 1){
+        if(tab > 0 || bl > 0 || nl == 1){
+            if(space != width && space >= 1){
                 write(placeto, " ", 1);
+                space--;
             }
         }     
    }
