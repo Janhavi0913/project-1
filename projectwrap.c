@@ -27,7 +27,10 @@ int space = width, exceed = 0;
 char *a = malloc(sizeof(char));
 int rval = read(placefrom, a, sizeof(char));
 strbuf_t word;
-sb_init(&word, width);  
+sb_init(&word, width);
+while(isspace(a[0]) != 0 && rval == 1){
+  rval = read(placefrom, a, sizeof(char));
+}
     while(rval == 1){       
        int wordlength = 0, nl = 0, tab = 0, bl = 0;
        while(isspace(a[0]) == 0 && rval == 1){
