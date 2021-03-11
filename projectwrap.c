@@ -107,6 +107,26 @@ int StartsWith(const char *a, const char *b)
         return 1;
     return 0;
 }
+int isdir(char *name) {
+    DIR* dir1 = opendir(name);
+    if(dir1 == NULL)
+        return 0;
+    //printf("Directory: %s\n", name);
+    closedir(dir1);
+    return 1;
+}
+int isFileExistsStats(const char *path)
+{
+    struct stat stats;
+
+    stat(path, &stats);
+
+    // Check for file existence
+    if (S_ISDIR(stats.st_mode))
+        return 0;
+
+    return 1;
+}
 int wrapdir (unsigned int width, DIR* dir, char* dirname)
 {
     struct dirent *cd;
@@ -116,24 +136,29 @@ int wrapdir (unsigned int width, DIR* dir, char* dirname)
     while(cd != NULL)
     {
         char* f = cd->d_name;
-        int wr = startsWith(f, "wrap");
-        int pd = startsWith(f, ".");
-        if(wr == 0 && pd == 0)
+        sb_init(&file, width);
+        sb_concat(&file, dirname);
+        sb_append(&file, '/');
+        sb_concat(&file, f);
+        if(isFileExistsStats(f) == 1)
         {
-            sb_init(&file, 5);
-            sb_concat(&file, dirname);
-            sb_append(&file, '/');
-            sb_concat(&file, f);
-            int fd = open(file.data, O_RDONLY);
-            if(fd != -1){
-                int error = printfile(width, f, fd, dirname);
-                if(error != 0)
-                    willerror = 1;
+            int wr = startsWith(f, "wrap");
+            int pd = startsWith(f, ".");
+            if(wr == 0 && pd == 0)
+            {
+                int fd = open(file.data, O_RDONLY);
+                if(fd != -1)
+                {
+                    int error = printfile(width, f, fd, dirname);
+                    if(error != 0)
+                        willerror = 1;
+                }
+                file = newword(file, width);
             }
-            file = newword(file);
         }
         cd = readdir(dir);
     }
+    //closedir(cd);
     sb_destroy(&file);
     closedir(dir);
     return willerror;
@@ -153,8 +178,7 @@ int main(int argc, char **argv){
     }
     else{
         char* f = argv[2];
-        DIR* dir1 = opendir(f);
-        if(dir1 == NULL)
+        if(isdir(f) == 0)
         {
             int fd = open(f, O_RDONLY);
             int error = wrapout(width, fd, 1);
@@ -164,6 +188,7 @@ int main(int argc, char **argv){
         }
         else
         {
+            DIR* dir1 = opendir(f);
             int error = wrapdir(width, dir1, f);
             if(error != 0)
                 return EXIT_FAILURE;
