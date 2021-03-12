@@ -170,6 +170,8 @@ int main(int argc, char **argv){
         char* f = argv[2];
         if(isdir(f) == 0){
             int fd = open(f, O_RDONLY);
+            if(fd == -1)
+                perror(argv[2]);
             int error = wrapout(width, fd, 1);
             write(1, "\n", 1);
             if(error != 0)
