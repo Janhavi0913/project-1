@@ -10,16 +10,16 @@
 #include <sys/stat.h>
 
 
-void print(strbuf_t w, int l, unsigned int placeto){
-char *word = malloc(sizeof(char) * l);
-    for(int i = 0; i < l; i++){
-        word[i] = w.data[i];
+void print(strbuf_t wordbuf, int length, unsigned int placeto){
+char *word = malloc(sizeof(char) * length);
+    for(int i = 0; i < length; i++){
+        word[i] = wordbuf.data[i];
     }
-    write(placeto, word, l);
+    write(placeto, word, length);
     free(word);
 }
-strbuf_t newWord(strbuf_t w, int width){
-    sb_destroy(&w);
+strbuf_t newWord(strbuf_t word, int width){
+    sb_destroy(&word);
     strbuf_t word2;
     sb_init(&word2, width);
     return word2;
@@ -32,51 +32,52 @@ strbuf_t word; sb_init(&word, width);
     while(isspace(a[0]) != 0 && rval == 1){ // if there is space character before the first word
         rval = read(placefrom, a, sizeof(char));
     }
-    while(rval == 1){       
+    while(rval == 1){ // while read does not reach end of the file
        int wordlength = 0;
-       while(isspace(a[0]) == 0 && rval == 1){
+       while(isspace(a[0]) == 0 && rval == 1){ // gets the word
             sb_append(&word, a[0]);
             wordlength++;
             rval = read(placefrom, a, sizeof(char));
         }
-        if(space == width){
+        // printing word and dealing with space and new lines
+        if(space == width){ // blank line
             if(wordlength >= width){
-                if(wordlength > width){
+                if(wordlength > width){ // word will exceed the width
                     exceed++;
                 }
-                print(word,wordlength,placeto);
+                print(word,wordlength,placeto); // exceeds with OR fits within width limit
                 word = newWord(word, width);
                 write(placeto, "\n", 1);
                 space = width;
             } 
-            else{
+            else{ // word will fit on the line with space left
                 print(word,wordlength,placeto);
                 word = newWord(word, width);
                 space = width - wordlength;
             }
         } 
-        else if(space != width){
-            if(wordlength > width){
+        else if(space != width){ // there are other words on the line already
+            if(wordlength > width){ // word will exceed width start new line, print, new line and continue
                 exceed++;
                 write(placeto, "\n", 1);
                 print(word,wordlength,placeto);
                 word = newWord(word, width);
                 write(placeto, "\n", 1);
                 space = width;
-            }else if(wordlength+1 > space){
+            }else if(wordlength+1 > space){ // we do not have room to add space and word 
                 write(placeto, "\n", 1);
                 print(word,wordlength,placeto);
                 word = newWord(word, width);
                 space = width - wordlength;
             }else{
-                write(placeto, " ", 1);
+                write(placeto, " ", 1); // put space then the word
                 print(word,wordlength,placeto);
                 word = newWord(word, width);
                 space = space - (wordlength + 1);
             }
         }
         while(isspace(a[0]) != 0 && rval == 1){ // dealing with space characters now
-            if (a[0] == '\n'){
+            if (a[0] == '\n'){ // we only care about the amount of newline characters 
                 newLine++;
             }
             rval = read(placefrom, a, sizeof(char));
