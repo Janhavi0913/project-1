@@ -181,6 +181,7 @@ int main(int argc, char **argv){
             if(fd == -1)
                 perror(argv[2]); // cannot open file
             int error = wrapout(width, fd, 1);
+            write(1, "\n", 1); // made it out anyways
             if(error != 0)
                 return EXIT_FAILURE;
         }
