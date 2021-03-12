@@ -179,13 +179,15 @@ int main(int argc, char **argv){
         if(isdir(f) == 0){
             int fd = open(f, O_RDONLY);
             if(fd == -1)
-                perror(argv[2]);
+                perror(argv[2]); // cannot open file
             int error = wrapout(width, fd, 1);
             if(error != 0)
                 return EXIT_FAILURE;
         }
         else{
             DIR* dir1 = opendir(f);
+            if(dir1 == NULL)
+                perror(argv[2]); // cannot open directory
             int error = wrapdir(width, dir1, f);
             if(error != 0)
                 return EXIT_FAILURE;
