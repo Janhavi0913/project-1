@@ -9,87 +9,91 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-void print(strbuf_t w, int l, unsigned int placeto){ //can't we just do write(placeto, w.data, l)?
-char *line = malloc(sizeof(char) * l);
+
+void print(strbuf_t w, int l, unsigned int placeto){
+char *word = malloc(sizeof(char) * l);
     for(int i = 0; i < l; i++){
-        line[i] = w.data[i];
+        word[i] = w.data[i];
     }
-write(placeto,line,l);
-free(line);
+    write(placeto, word, l);
+    free(word);
 }
-strbuf_t newword(strbuf_t w, int width){
+strbuf_t newWord(strbuf_t w, int width){
     sb_destroy(&w);
     strbuf_t word2;
     sb_init(&word2, width);
     return word2;
 }
-int wrapout (unsigned int width, unsigned int placefrom, unsigned int placeto){ // stdout wrap text width fd, 
-int space = width, exceed = 0;
+int wrapout(unsigned int width, unsigned int placefrom, unsigned int placeto){ 
+int exceed = 0, space = width, newLine = 0;
 char *a = malloc(sizeof(char));
 int rval = read(placefrom, a, sizeof(char));
-strbuf_t word;
-sb_init(&word, width);
-    while(isspace(a[0]) != 0 && rval == 1){
+strbuf_t word; sb_init(&word, width);
+    while(isspace(a[0]) != 0 && rval == 1){ // if there is space character before the first word
         rval = read(placefrom, a, sizeof(char));
     }
     while(rval == 1){       
-       int wordlength = 0, nl = 0, tab = 0, bl = 0;
+       int wordlength = 0;
        while(isspace(a[0]) == 0 && rval == 1){
             sb_append(&word, a[0]);
             wordlength++;
             rval = read(placefrom, a, sizeof(char));
         }
-        if(wordlength + 1 <= space){
-            space = space - wordlength;
-            print(word, wordlength, placeto);
-            word = newword(word, width); // done with the word
-        }
-        else if(wordlength >= space){
-                if(space != width){
-                    write(placeto, "\n", 1); // put a newline
-                }
+        if(space == width){
+            if(wordlength >= width){
                 if(wordlength > width){
                     exceed++;
-                    print(word, wordlength, placeto);//write the word one the newline then start a newline 
-                    write(placeto, "\n", 1);
-                    space = width;
-                    word = newword(word, width); // done with the word
                 }
-                else{
-                    space = width - wordlength;
-                    print(word,wordlength, placeto);
-                    word = newword(word, width); // done with the word
-                }
+                print(word,wordlength,placeto);
+                word = newWord(word, width);
+                write(placeto, "\n", 1);
+                space = width;
+            } 
+            else{
+                print(word,wordlength,placeto);
+                word = newWord(word, width);
+                space = width - wordlength;
+            }
+        } 
+        else if(space != width){
+            if(wordlength > width){
+                exceed++;
+                write(placeto, "\n", 1);
+                print(word,wordlength,placeto);
+                word = newWord(word, width);
+                write(placeto, "\n", 1);
+                space = width;
+            }else if(wordlength+1 > space){
+                write(placeto, "\n", 1);
+                print(word,wordlength,placeto);
+                word = newWord(word, width);
+                space = width - wordlength;
+            }else{
+                write(placeto, " ", 1);
+                print(word,wordlength,placeto);
+                word = newWord(word, width);
+                space = space - (wordlength + 1);
+            }
         }
         while(isspace(a[0]) != 0 && rval == 1){ // dealing with space characters now
             if (a[0] == '\n'){
-                nl++;
+                newLine++;
             }
-            else if (a[0] == '\t'){
-                tab++;
-            }
-            else if (a[0] == ' '){ 
-                bl++;
-            }
-        rval = read(placefrom, a, sizeof(char));
+            rval = read(placefrom, a, sizeof(char));
         }
-        if(nl >= 2){            
+        if(newLine >= 2){ // paragraph break
             write(placeto, "\n", 1);
             write(placeto, "\n", 1);
             space = width;
         }
-        if(tab > 0 || bl > 0 || nl == 1){
-            if(space != width && space >= 1 && rval != 0){
-                write(placeto, " ", 1);
-                space--;
-            }
-        }     
+        newLine = 0;
    }
    free(a);
    sb_destroy(&word);
    close(placefrom);
    return exceed;
 }
+
 int printfile(unsigned int width, char* filename, int fd, char* dirname){
     strbuf_t newfile;
     sb_init(&newfile, 6);
@@ -118,8 +122,7 @@ int isdir(char *name) {
 int isFileExistsStats(const char *path){
     struct stat stats;
     stat(path, &stats);
-    // Check for file existence
-    if (S_ISDIR(stats.st_mode))
+    if (S_ISDIR(stats.st_mode)) // Check for file existence
         return 0;
     return 1;
 }
@@ -144,7 +147,7 @@ int wrapdir (unsigned int width, DIR* dir, char* dirname){
                     if(error != 0)
                         willerror = 1;
                 }
-                file = newword(file, width);
+                file = newWord(file, width);
             }
         }
         cd = readdir(dir);
@@ -156,10 +159,14 @@ int wrapdir (unsigned int width, DIR* dir, char* dirname){
 
 int main(int argc, char **argv){
     if(argc < 2){ // too many arguments or too little arguments
-     printf("Number of argument error\n");
+        printf("Number of argument error\n");
         return EXIT_FAILURE;
     }
     unsigned int width = atoi(argv[1]); 
+    if(width <= 0){
+        printf("Inappropriate size of width\n");
+        return EXIT_FAILURE;  
+    }
     if(argc == 2){ // no file or directory provided  
         int error = wrapout(width, 0, 1);
         write(1, "\n", 1); // made it out anyways
