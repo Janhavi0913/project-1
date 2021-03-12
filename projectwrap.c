@@ -173,7 +173,6 @@ int main(int argc, char **argv){
             if(fd == -1)
                 perror(argv[2]);
             int error = wrapout(width, fd, 1);
-            write(1, "\n", 1);
             if(error != 0)
                 return EXIT_FAILURE;
         }
