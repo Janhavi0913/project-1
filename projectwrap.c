@@ -114,7 +114,6 @@ int isdir(char *name) {
     DIR* dir1 = opendir(name);
     if(dir1 == NULL)
         return 0;
-    //printf("Directory: %s\n", name);
     closedir(dir1);
     return 1;
 }
@@ -143,7 +142,7 @@ int wrapdir (unsigned int width, DIR* dir, char* dirname)
         sb_concat(&file, dirname);
         sb_append(&file, '/');
         sb_concat(&file, f);
-        if(isFileExistsStats(f) == 1)
+        if(isFileExistsStats(file.data) == 1)
         {
             int wr = startsWith(f, "wrap");
             int pd = startsWith(f, ".");
@@ -161,7 +160,6 @@ int wrapdir (unsigned int width, DIR* dir, char* dirname)
         }
         cd = readdir(dir);
     }
-    //closedir(cd);
     sb_destroy(&file);
     closedir(dir);
     return willerror;
